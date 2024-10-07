@@ -1,0 +1,51 @@
+library(baseballr)
+library(dplyr)
+library(purrr)
+dat<-ncaa_teams(year = "2024", division = 2)
+
+dat <- dat %>%
+       mutate(team_id = map_chr(team_name, function(name) {
+             result <- ncaa_school_id_lu(team_name = name)
+             
+               # Assuming the result has a column or field 'team_id', you can extract it like this:
+             if (length(result) > 0) {
+                     return(as.character(result$team_id[1]))  # Extract the team_id from the first row
+                 } else {
+                       return(NA)  # Return NA if no result is found
+                   }
+         }))
+
+
+
+
+# Corrected manual_ids vector
+manual_ids <- c(
+  "Dominican (NY)" = "8956",
+  "Wilmington (DE)" = "1460",
+  "Emmanuel (GA)" = "30193",
+  "King (TN)" = "30051",
+  "Salem (WV)" = "19117",
+  "Lincoln (PA)" = "357",
+  "Queens (NY)" = "560",
+  "Wayne St. (MI)" = "757",
+  "Maryville (MO)" = "395",
+  "Union (TN)" = "30153",
+  "St. Mary's (TX)" = "1346",
+  "Charleston (WV)" = "1013",
+  "Notre Dame (OH)" = "30126",
+  "Augustana (SD)" = "41",
+  "Wayne St. (NE)" = "1433",
+  "California (PA)" = "106",
+  "Indiana (PA)" = "307",
+  "Anderson (SC)" = "13028",
+  "Albany St. (GA)" = "13",
+  "Embry-Riddle (FL)" = "9680",
+  "Regis (CO)" = "568"
+)
+
+ 
+   # Now, update the missing team_id values in the dataframe
+   dat <- dat %>%
+         mutate(team_id = ifelse(is.na(team_id) & team_name %in% names(manual_ids), 
+                                                               manual_ids[team_name], 
+                                                               team_id))
