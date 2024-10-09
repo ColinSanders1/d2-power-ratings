@@ -3,6 +3,8 @@ library(dplyr)
 library(purrr)
 dat<-ncaa_teams(year = "2024", division = 2)
 
+data<-try(load_ncaa_baseball_teams())
+
 dat <- dat %>%
        mutate(team_id = map_chr(team_name, function(name) {
              result <- ncaa_school_id_lu(team_name = name)
@@ -49,3 +51,22 @@ manual_ids <- c(
          mutate(team_id = ifelse(is.na(team_id) & team_name %in% names(manual_ids), 
                                                                manual_ids[team_name], 
                                                                team_id))
+   
+   
+   stats<-ncaa_scrape(8956, year = most_recent_ncaa_baseball_season(), type = "batting")
+   colnames(stats) <- c("#", "Player", "Yr", "Pos", "Height", "Bat/Throw", "GP", "GS", "BA", 
+                        "OBPct", "SlgPct", "R", "AB", "H", "X2B", "X3B", "TB", "HR", "RBI", 
+                        "uBB", "HBP", "SF", "SH", "SO", "OPP_DP", "CS", "Picked_Off", "SB", 
+                        "IBB", "GIDP", "RBI2out", "season", "team_id")
+   stats$AB <- as.numeric(stats$AB)
+  stats[is.na(stats)] <- 0
+   
+   
+   stats$X1B<-stats$H-(stats$X2B + stats$X3B + stats$HR)
+   stats$PA <- stats$AB + stats$uBB + stats$HBP + stats$SF + stats$SH
+   stats$OPS <- stats$OBPct + stats$SlgPct
+   
+   stats<-woba_plus(stats)
+   
+   stats <- stats[!is.na(stats$wOBA), ]
+   stats <- stats[!grepl("Totals", stats$Player), ]
